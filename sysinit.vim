@@ -19,7 +19,6 @@ Plugin 'VundleVim/Vundle.vim'
 Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
 Plugin 'scrooloose/nerdtree'
 Plugin 'scrooloose/nerdcommenter'
-"Plugin 'valloric/youcompleteme'
 Plugin 'ap/vim-buftabline'
 Plugin 'morhetz/gruvbox'
 Plugin 'drewtempelmeyer/palenight.vim'
@@ -31,12 +30,16 @@ Plugin 'vim-airline/vim-airline'
 Plugin 'othree/html5.vim'
 Plugin 'mattn/emmet-vim'
 Plugin 'Chiel92/vim-autoformat'
-"Plugin 'scrooloose/syntastic'
+Plugin 'scrooloose/syntastic'
 Plugin 'roxma/nvim-completion-manager'
-"Plugin 'honza/vim-snippets'
+Plugin 'honza/vim-snippets'
 Plugin 'valloric/MatchTagAlways'
 Plugin 'neomake/neomake'
 Plugin 'skywind3000/asyncrun.vim'
+Plugin 'dracula/vim'
+Plugin 'sonph/onehalf'
+Plugin 'chriskempson/base16-vim'
+Plugin 'nikvdp/ejs-syntax'
 call vundle#end()
 " required
 "---------------------------------------------------------------------
@@ -60,7 +63,12 @@ set laststatus=0
 " -----------------------------------------------------------------------------------------
 " This sets the color scheme
 set background=dark
-colorscheme palenight
+"let base16colorspace=256  " Access colors present in 256 colorspace
+"colorscheme palenight
+"colorscheme onehalf
+"colorscheme base16
+colorscheme dracula
+"colorscheme gruvbox
 if (has("nvim"))
    "For Neovim 0.1.3 and 0.1.4 < https://github.com/neovim/neovim/pull/2198 >
    let $NVIM_TUI_ENABLE_TRUE_COLOR=1
@@ -207,3 +215,7 @@ augroup filetype javascript syntax=javascript
    autocmd BufWritePost *.js AsyncRun -post=checktime ./node_modules/.bin/eslint --fix %
 
    let verbose=1
+
+   " ALE Plugin
+   "let b:ale_fixers = ['eslint']
+   "let b:ale_fix_on_save = 1
