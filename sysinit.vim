@@ -1,6 +1,9 @@
 " set theruntime path to include Vundle and initialize
 set hidden
 set autochdir
+set encoding=UTF-8
+filetype plugin on
+set omnifunc=syntaxcomplete#Complete
 ""syntax on
 map q <Nop>
 
@@ -18,32 +21,33 @@ call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'
 Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
 Plugin 'scrooloose/nerdtree'
+Plugin 'tsony-tsonev/nerdtree-git-plugin'
 Plugin 'scrooloose/nerdcommenter'
-Plugin 'ap/vim-buftabline'
+"Plugin 'ap/vim-buftabline'
 Plugin 'morhetz/gruvbox'
 Plugin 'drewtempelmeyer/palenight.vim'
 Plugin 'pangloss/vim-javascript'
 Plugin 'mxw/vim-jsx'
 Plugin 'leshill/vim-json'
-Plugin 'tpope/vim-surround'
+"Plugin 'tpope/vim-surround'
 Plugin 'vim-airline/vim-airline'
+Plugin 'ryanoasis/vim-devicons'
 Plugin 'othree/html5.vim'
 Plugin 'mattn/emmet-vim'
 Plugin 'Chiel92/vim-autoformat'
-Plugin 'scrooloose/syntastic'
-Plugin 'roxma/nvim-completion-manager'
-Plugin 'honza/vim-snippets'
-Plugin 'valloric/MatchTagAlways'
-Plugin 'neomake/neomake'
-Plugin 'skywind3000/asyncrun.vim'
-Plugin 'dracula/vim'
-Plugin 'sonph/onehalf'
-Plugin 'chriskempson/base16-vim'
+Plugin 'airblade/vim-gitgutter'
+Plugin 'ctrlpvim/ctrlp.vim' " fuzzy find files
+Plugin 'maxmellon/vim-jsx-pretty'
+Plugin 'townk/vim-autoclose'
+Plugin 'valloric/youcompleteme'
 Plugin 'nikvdp/ejs-syntax'
+"Plugin 'neoclide/coc.nvim', {'branch': 'release'}
+Plugin 'marijnh/tern_for_vim'
 call vundle#end()
 " required
 "---------------------------------------------------------------------
 " prevent vim from giving a warning it the swp file is open
+let g:airline_powerline_fonts = 1
 set shortmess=A
 "set foldmethod=syntax
 set cursorline
@@ -52,12 +56,22 @@ set ignorecase
 set nobackup
 autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 set virtualedit=onemore
-nmap <c-i> :Autoformat<CR>
+nmap <C-A-b> :Autoformat<CR>
 
 let g:autoformat_autoindent = 1
 let g:autoformat_retab = 1
 let g:autoformat_remove_trailing_spaces = 1
 
+" auto close tag
+autocmd BufNewFile,BufRead *.js set filetype=javascript.jsx
+autocmd BufNewFile,BufRead *.jsx set filetype=javascript.jsx
+
+" auto refresh nertree
+autocmd BufWritePost * NERDTreeFocus | execute 'normal R' | wincmd p
+
+" ctrlp
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+let g:WebDevIconsUnicodeDecorateFolderNodes = 1
 " -----------------------------------------------------------------------------------------
 set laststatus=0
 " -----------------------------------------------------------------------------------------
@@ -67,8 +81,8 @@ set background=dark
 "colorscheme palenight
 "colorscheme onehalf
 "colorscheme base16
-colorscheme dracula
-"colorscheme gruvbox
+"colorscheme dracula
+colorscheme gruvbox
 if (has("nvim"))
    "For Neovim 0.1.3 and 0.1.4 < https://github.com/neovim/neovim/pull/2198 >
    let $NVIM_TUI_ENABLE_TRUE_COLOR=1
@@ -102,15 +116,25 @@ set backspace=indent,eol,start
 " other editor settings
 set number
 set mouse=a
-set tabstop=4
+set tabstop=2
 set shiftwidth=3
+
+" next and prev tabs
+nnoremap <F2> :bprev<CR>
+nnoremap <F3> :bnext<CR>
+
 
 " setting indent markers-------------------------------------------------------------------
 set listchars=tab:\|\
 set list
 
 " -----------------------------------------------------------------------------------------
+" Prettier
+"map <C-A-f> :Prettier<CR>
 " Nerd Tree file manager
+" open a NERDTree automatically when vim starts up if no files
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 let g:NERDTreeWinSize=30
 map <C-f> :NERDTreeToggle<CR>
 let g:nerdtree_tabs_open_on_console_startup=1
@@ -118,18 +142,24 @@ autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isT
 let NERDTreeQuitOnOpen=0 " closes upon opening a file in nerdtree
 let g:NERDTreeDirArrowExpandable = '▸'
 let g:NERDTreeDirArrowCollapsible = '▾'
+let g:NERDTreeGitStatusWithFlags = 1
+let g:NERDTreeMinimalUI = 1
+let g:NERDTreeIgnore = []
+let g:NERDTreeStatusline = ''
+let g:NERDTreeShowHidden = 1
+let g:NERDTreeIgnore = ['^node_modules$']
+"
+" Call NERDTreeFind iff NERDTree is active, current window contains a modifiable
+" file, and we're not in vimdiff
+function! SyncTree()
+   if &modifiable && IsNERDTreeOpen() && strlen(expand('%')) > 0 && !&diff
+	  NERDTreeFind
+	  wincmd p
+   endif
+endfunction
 " -----------------------------------------------------------------------------------------
 " save
 :nmap <c-s> :w<CR>
-" navigates to the next buffer
-:nmap <c-n> :bnext<CR>
-:nmap <c-p> :bprev<CR>
-:ab Wq :wq
-:ab W :w
-:ab WQ :wq
-:ab Q :q
-:set guitablabel=%t  " show only the file name an not the path
-:au FocusLost * :wa  " save when focus is lost (not sure if this is working. Test)
 
 " start the terminal in the given path by typing :t on the minibuffer
 :ab t :!urxvt -bg black --geometry 85x47+683+0&\|<CR>
@@ -196,14 +226,14 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_javascript_checkers = ['eslint']
 let g:syntastic_aggregate_errors = 1
-"AIRLINE
+" AIRLINE
 "Tự động hiển thị tất cả bộ đệm khi chỉ có một tab mở.
 let g:airline#extensions#tabline#enabled = 1
 "định dạng đường dẫn
 let g:airline#extensions#tabline#formatter = 'default'
 "" ES6 Syntax Highlight
 augroup filetype javascript syntax=javascript
-   let g:jsx_ext_required = 0 " Allow JSX in normal JS files
+   let g:jsx_ext_required = 1 " Allow JSX in normal JS files
    ""Auto save
    let g:auto_save_in_insert_mode = 0  " do not save while in insert mode
 
@@ -212,10 +242,35 @@ augroup filetype javascript syntax=javascript
 			\'javascript.jsx' : 1,
 			\}
    ""asyncrun
-   autocmd BufWritePost *.js AsyncRun -post=checktime ./node_modules/.bin/eslint --fix %
+   "autocmd BufWritePost *.js AsyncRun -post=checktime ./node_modules/.bin/eslint --fix %
 
    let verbose=1
 
-   " ALE Plugin
-   "let b:ale_fixers = ['eslint']
-   "let b:ale_fix_on_save = 1
+" use alt+hjkl to move between split/vsplit panels
+tnoremap <A-h> <C-\><C-n><C-w>h
+tnoremap <A-j> <C-\><C-n><C-w>j
+tnoremap <A-k> <C-\><C-n><C-w>k
+tnoremap <A-l> <C-\><C-n><C-w>l
+nnoremap <A-h> <C-w>h
+nnoremap <A-j> <C-w>j
+nnoremap <A-k> <C-w>k
+nnoremap <A-l> <C-w>l
+
+" terminal
+" turn terminal to normal mode with escape
+tnoremap <Esc> <C-\><C-n>
+" start terminal in insert mode
+au BufEnter * if &buftype == 'terminal' | :startinsert | endif
+
+" open terminal on ctrl+;
+" uses zsh instead of bash
+function! OpenTerminal()
+  split term://bash
+  resize 10
+endfunction
+nnoremap <c-s-n> :call OpenTerminal()<CR>
+
+
+" Coc nvim
+" highlight
+"autocmd CursorHold * silent call CocActionAsync('highlight')
